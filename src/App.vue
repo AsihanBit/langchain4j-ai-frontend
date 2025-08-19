@@ -1,12 +1,11 @@
 <template>
-  <h1>You did it!</h1>
-
-  <ThemeToggle></ThemeToggle>
+  <div class="min-h-screen bg-white dark:bg-gray-900">
+    <RouterView />
+  </div>
 </template>
 
 <script setup lang="ts">
-import ThemeToggle from './components/shadcn/ThemeToggle.vue';
-
+import { RouterView } from 'vue-router'
 </script>
 
 <style scoped></style>

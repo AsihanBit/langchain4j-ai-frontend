@@ -9,6 +9,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Button: typeof import('./src/components/ui/button/Button.vue')['default']
+    ChatMessage: typeof import('./src/components/ChatMessage.vue')['default']
+    ConversationList: typeof import('./src/components/ConversationList.vue')['default']
     DropdownMenu: typeof import('./src/components/ui/dropdown-menu/DropdownMenu.vue')['default']
     DropdownMenuCheckboxItem: typeof import('./src/components/ui/dropdown-menu/DropdownMenuCheckboxItem.vue')['default']
     DropdownMenuContent: typeof import('./src/components/ui/dropdown-menu/DropdownMenuContent.vue')['default']
@@ -25,6 +27,10 @@ declare module 'vue' {
     DropdownMenuTrigger: typeof import('./src/components/ui/dropdown-menu/DropdownMenuTrigger.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ScrollArea: typeof import('./src/components/ui/scroll-area/ScrollArea.vue')['default']
+    ScrollBar: typeof import('./src/components/ui/scroll-area/ScrollBar.vue')['default']
+    Textarea: typeof import('./src/components/ui/textarea/Textarea.vue')['default']
     ThemeToggle: typeof import('./src/components/shadcn/ThemeToggle.vue')['default']
+    VanishingInput: typeof import('./src/components/ui/vanishing-input/VanishingInput.vue')['default']
   }
 }
