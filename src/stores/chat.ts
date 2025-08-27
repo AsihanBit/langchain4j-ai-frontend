@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Conversation, Message } from '@/types/chat'
 import { getConversationsByIp, getMessagesById, createNewConversation } from '@/api/chat'
+import { generateConversationTitle } from '@/api/chat'
 
 export const useChatStore = defineStore('chat', () => {
   // 状态
@@ -88,6 +89,14 @@ export const useChatStore = defineStore('chat', () => {
     currentMessages.value.push(message)
   }
 
+  // 更新会话标题
+  const updateConversationTitle = (memoryId: string, title: string) => {
+    const idx = conversations.value.findIndex((c) => c.memoryId === memoryId)
+    if (idx !== -1) {
+      conversations.value[idx] = { ...conversations.value[idx], title }
+    }
+  }
+
   return {
     // 状态
     conversations,
@@ -107,5 +116,6 @@ export const useChatStore = defineStore('chat', () => {
     setCurrentMemoryId,
     clearCurrentConversation,
     addMessage,
+    updateConversationTitle,
   }
 })

@@ -2,6 +2,7 @@ export interface Conversation {
   id: string
   memoryId: string
   userIp: string
+  title?: string // 新增：会话标题（后端返回）
   createdTime?: string
   lastSendTime?: string
 }
@@ -14,6 +15,12 @@ export interface ConversationsRes {
 export interface CreateNewConversationRes {
   memoryId: string
   message: string
+  title?: string
+}
+
+export interface GenerateTitleRes {
+  memoryId: string
+  title: string
 }
 
 export interface Message {

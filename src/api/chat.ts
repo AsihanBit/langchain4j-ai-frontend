@@ -5,6 +5,7 @@ import type {
   MessagesRes,
   ChatReq,
   ApiResponse,
+  GenerateTitleRes,
 } from '@/types/chat'
 
 // 获取用户所有对话列表
@@ -15,6 +16,14 @@ export const getConversationsByIp = (): Promise<ApiResponse<ConversationsRes>> =
 // 创建新对话
 export const createNewConversation = (): Promise<ApiResponse<CreateNewConversationRes>> => {
   return request.post('/conversation/createNew')
+}
+
+// 生成会话标题（根据第一条消息）
+export const generateConversationTitle = (data: {
+  memoryId: string
+  message: string
+}): Promise<ApiResponse<GenerateTitleRes>> => {
+  return request.post('/conversation/generateTitle', data)
 }
 
 // 根据memoryId获取对话消息

@@ -1,14 +1,14 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+  <div class="conversation-list-container">
     <!-- 头部 -->
-    <div class="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-700">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">对话</h2>
+    <div class="header">
+      <div class="header-content">
+        <h2 class="title">对话</h2>
         <Button
           @click="handleCreateNew"
           :disabled="isCreatingConversation"
           size="sm"
-          class="rounded-full"
+          class="create-button"
         >
           <Plus class="w-4 h-4" />
         </Button>
@@ -16,25 +16,23 @@
     </div>
 
     <!-- 对话列表 -->
-    <div class="flex-1 min-h-0">
+    <div class="list-container">
       <ScrollArea class="h-full">
-        <div class="p-2 space-y-1">
+        <div class="list-content">
+          <!-- 对话项列表 -->
           <div
             v-for="conversation in conversations"
             :key="conversation.id"
             @click="() => handleSelectConversation(conversation.memoryId)"
             :class="[
-              'p-3 rounded-lg cursor-pointer transition-colors duration-200',
-              'hover:bg-gray-100 dark:hover:bg-gray-800',
-              currentMemoryId === conversation.memoryId
-                ? 'bg-gray-200 dark:bg-gray-700'
-                : 'bg-white dark:bg-gray-800/50'
+              'conversation-item',
+              currentMemoryId === conversation.memoryId ? 'active' : ''
             ]"
           >
-            <div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              对话 {{ conversation.memoryId.slice(-8) }}
+            <div class="conversation-title">
+              {{ conversation.title || `对话 ${conversation.memoryId.slice(-8)}` }}
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div class="conversation-time">
               {{ conversation.lastSendTime ? formatTime(conversation.lastSendTime) : '新对话' }}
             </div>
           </div>
@@ -42,20 +40,20 @@
           <!-- 空状态 -->
           <div
             v-if="!isLoading && conversations.length === 0"
-            class="text-center py-8 text-gray-500 dark:text-gray-400"
+            class="empty-state"
           >
-            <MessageCircle class="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p class="text-sm">还没有对话</p>
-            <p class="text-xs mt-1">点击 + 开始新对话</p>
+            <MessageCircle class="empty-icon" />
+            <p class="empty-title">还没有对话</p>
+            <p class="empty-subtitle">点击 + 开始新对话</p>
           </div>
 
           <!-- 加载状态 -->
           <div
             v-if="isLoading"
-            class="text-center py-8 text-gray-500 dark:text-gray-400"
+            class="loading-state"
           >
-            <div class="animate-spin w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full mx-auto"></div>
-            <p class="text-sm mt-2">加载中...</p>
+            <div class="loading-spinner"></div>
+            <p class="loading-text">加载中...</p>
           </div>
         </div>
       </ScrollArea>
@@ -118,3 +116,185 @@ const formatTime = (timeStr: string) => {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+// ===== 对话列表组件样式 =====
+
+// 主容器 - 全高度弹性布局
+.conversation-list-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb; // 浅灰色背景
+
+  // 暗色主题下的背景
+  .dark & {
+    background-color: #111827; // 深色背景
+  }
+}
+
+// 头部区域 - 标题和新建按钮
+.header {
+  flex-shrink: 0; // 防止被压缩
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb; // 底部边框
+
+  // 暗色主题下的边框
+  .dark & {
+    border-bottom-color: #374151;
+  }
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .title {
+      font-size: 1.125rem; // 18px
+      font-weight: 600; // 半粗体
+      color: #111827; // 深色文字
+
+      // 暗色主题下的文字颜色
+      .dark & {
+        color: #f9fafb;
+      }
+    }
+
+    .create-button {
+      border-radius: 50%; // 圆形按钮
+    }
+  }
+}
+
+// 列表容器 - 滚动区域
+.list-container {
+  flex: 1;
+  min-height: 0; // 允许收缩
+
+  .list-content {
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; // 项目间距
+  }
+}
+
+// 对话项样式
+.conversation-item {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease; // 平滑过渡动画
+  background-color: white;
+
+  // 暗色主题下的默认背景
+  .dark & {
+    background-color: rgba(55, 65, 81, 0.5); // 半透明深灰色
+  }
+
+  // 悬停效果
+  &:hover {
+    background-color: #f3f4f6; // 浅灰色
+
+    .dark & {
+      background-color: #374151; // 深灰色
+    }
+  }
+
+  // 激活状态（当前选中的对话）
+  &.active {
+    background-color: #e5e7eb; // 更深的灰色
+
+    .dark & {
+      background-color: #4b5563; // 更深的深灰色
+    }
+  }
+
+  .conversation-title {
+    font-size: 0.875rem; // 14px
+    font-weight: 500; // 中等粗体
+    color: #111827; // 深色文字
+    white-space: nowrap; // 不换行
+    overflow: hidden; // 隐藏溢出
+    text-overflow: ellipsis; // 显示省略号
+
+    // 暗色主题下的文字颜色
+    .dark & {
+      color: #f9fafb;
+    }
+  }
+
+  .conversation-time {
+    font-size: 0.75rem; // 12px
+    color: #6b7280; // 灰色文字
+    margin-top: 0.25rem;
+
+    // 暗色主题下的文字颜色
+    .dark & {
+      color: #9ca3af;
+    }
+  }
+}
+
+// 空状态样式
+.empty-state {
+  text-align: center;
+  padding: 2rem 0;
+  color: #6b7280; // 灰色文字
+
+  // 暗色主题下的文字颜色
+  .dark & {
+    color: #9ca3af;
+  }
+
+  .empty-icon {
+    width: 3rem; // 48px
+    height: 3rem;
+    margin: 0 auto 0.5rem;
+    opacity: 0.5; // 半透明
+  }
+
+  .empty-title {
+    font-size: 0.875rem; // 14px
+    margin-bottom: 0.25rem;
+  }
+
+  .empty-subtitle {
+    font-size: 0.75rem; // 12px
+  }
+}
+
+// 加载状态样式
+.loading-state {
+  text-align: center;
+  padding: 2rem 0;
+  color: #6b7280; // 灰色文字
+
+  // 暗色主题下的文字颜色
+  .dark & {
+    color: #9ca3af;
+  }
+
+  .loading-spinner {
+    width: 1.5rem; // 24px
+    height: 1.5rem;
+    border: 2px solid #d1d5db; // 浅灰色边框
+    border-top-color: #4b5563; // 深灰色顶部边框
+    border-radius: 50%;
+    margin: 0 auto;
+    animation: spin 1s linear infinite; // 旋转动画
+  }
+
+  .loading-text {
+    font-size: 0.875rem; // 14px
+    margin-top: 0.5rem;
+  }
+}
+
+// 旋转动画关键帧
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

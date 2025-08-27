@@ -24,6 +24,10 @@
       class="relative z-50 size-full rounded-full border-none bg-transparent pl-4 pr-20 text-sm text-black focus:outline-none focus:ring-0 sm:pl-10 sm:text-base dark:text-white"
       :class="{ 'text-transparent dark:text-transparent': animating }"
       @keydown.enter="handleKeyDown"
+      @compositionstart="isComposing = true"
+      @compositionend="isComposing = false"
+      @focus="onFocus"
+      @blur="onBlur"
     />
 
     <!-- Submit Button -->
@@ -65,7 +69,7 @@
     <!-- Placeholder Text -->
     <div class="pointer-events-none absolute inset-0 flex items-center rounded-full">
       <Transition
-        v-show="!vanishingText"
+        v-show="showPlaceholder"
         mode="out-in"
         enter-active-class="transition duration-300 ease-out"
         leave-active-class="transition duration-300 ease-in"
@@ -86,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, onMounted, watch, onBeforeUnmount, computed } from "vue";
 import { templateRef } from "@vueuse/core";
 
 // Define interfaces for props and data structures
@@ -119,6 +123,10 @@ const intervalRef = ref<number | null>(null);
 const newDataRef = ref<AnimatedPixel[]>([]);
 const animationFrame = ref<number | null>(null);
 
+  // 处理中文输入法（拼音选词）状态
+  const isComposing = ref<boolean>(false);
+  const isFocused = ref<boolean>(false);
+
 // props
 const props = withDefaults(defineProps<Props>(), {
   placeholders: () => ["Placeholder 1", "Placeholder 2", "Placeholder 3"],
@@ -131,8 +139,12 @@ onMounted(() => {
 });
 
 function changePlaceholder(): void {
+  if (intervalRef.value) clearInterval(intervalRef.value);
   intervalRef.value = window.setInterval(() => {
-    currentPlaceholder.value = (currentPlaceholder.value + 1) % props.placeholders.length;
+    // 聚焦或正在中文输入（composition）时，不切换占位文本
+    if (!isFocused.value && !isComposing.value && !vanishingText.value) {
+      currentPlaceholder.value = (currentPlaceholder.value + 1) % props.placeholders.length;
+    }
   }, 3000);
 }
 
@@ -143,6 +155,13 @@ function handleVisibilityChange(): void {
   } else if (document.visibilityState === "visible") {
     changePlaceholder();
   }
+}
+
+function onFocus() {
+  isFocused.value = true;
+}
+function onBlur() {
+  isFocused.value = false;
 }
 
 function draw(): void {
@@ -168,9 +187,9 @@ function draw(): void {
   const newData: PixelData[] = [];
 
   for (let t = 0; t < 800; t++) {
-    let i = 4 * t * 800;
+    const i = 4 * t * 800;
     for (let n = 0; n < 800; n++) {
-      let e = i + 4 * n;
+      const e = i + 4 * n;
       if (pixelData[e] !== 0 && pixelData[e + 1] !== 0 && pixelData[e + 2] !== 0) {
         newData.push({
           x: n,
@@ -247,6 +266,11 @@ function vanishAndSubmit(): void {
 function handleSubmit(): void {
   vanishAndSubmit();
 }
+
+// 控制占位符显示：仅在未输入、未聚焦、未组合输入时显示
+const showPlaceholder = computed(() => {
+  return !vanishingText.value && !isFocused.value && !isComposing.value
+})
 
 // Watch for value changes
 watch(vanishingText, (newVal: string) => {
