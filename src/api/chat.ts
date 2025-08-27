@@ -42,7 +42,6 @@ export const sendChatMessage = async (data: ChatReq) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Forwarded-For': '111.111.111.555',
         Accept: 'text/plain',
       },
       body: JSON.stringify(data),

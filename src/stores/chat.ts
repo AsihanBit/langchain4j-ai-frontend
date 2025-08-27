@@ -11,6 +11,8 @@ export const useChatStore = defineStore('chat', () => {
   const currentMessages = ref<Message[]>([])
   const isLoading = ref(false)
   const isCreatingConversation = ref(false)
+  // 跨页面一次性首条消息缓存（不污染URL）
+  const pendingInitialMessage = ref<string | null>(null)
 
   // 计算属性
   const currentConversation = computed(() => {
@@ -84,6 +86,16 @@ export const useChatStore = defineStore('chat', () => {
     currentMessages.value = []
   }
 
+  // 一次性首条消息：设置与消费
+  const setPendingInitialMessage = (msg: string) => {
+    pendingInitialMessage.value = msg
+  }
+  const consumePendingInitialMessage = (): string | null => {
+    const m = pendingInitialMessage.value
+    pendingInitialMessage.value = null
+    return m
+  }
+
   const addMessage = (message: Message) => {
     // 简单地添加到数组末尾，让页面显示时再处理顺序
     currentMessages.value.push(message)
@@ -117,5 +129,9 @@ export const useChatStore = defineStore('chat', () => {
     clearCurrentConversation,
     addMessage,
     updateConversationTitle,
+    // 首条消息跨页面传递（不污染URL）
+    pendingInitialMessage,
+    setPendingInitialMessage,
+    consumePendingInitialMessage,
   }
 })

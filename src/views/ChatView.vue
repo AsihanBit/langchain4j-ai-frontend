@@ -460,15 +460,13 @@ onMounted(async () => {
   console.log('ChatView mounted, loading conversations...')
   await chatStore.loadConversations()
 
-  // 处理从Home页面传来的初始消息
-  const initialMessage = route.query.message as string
-  const initialMemoryId = (route.query.memoryId as string) || currentMemoryId.value
+  // 处理从 Home 页面带来的首条消息（通过 store 暂存，不污染 URL）
+  const initialMessage = chatStore.consumePendingInitialMessage()
+  const initialMemoryId = currentMemoryId.value
   if (initialMessage && initialMemoryId) {
-    // 如果有初始消息且已有对话ID，发送消息
     const isFirstMessage = currentMessages.value.length === 0
     await sendMessage(initialMessage, initialMemoryId)
 
-    // 首条消息生成标题
     if (isFirstMessage) {
       try {
         const res = await generateConversationTitle({ memoryId: initialMemoryId, message: initialMessage })
@@ -478,7 +476,6 @@ onMounted(async () => {
         }
       } catch (e) {
         console.warn('generateConversationTitle (initial) failed:', e)
-        // 后端不可用时使用备用标题
       }
     }
   }

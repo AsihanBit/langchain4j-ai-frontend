@@ -88,11 +88,11 @@ const handleWelcomeSubmit = async (message: string) => {
   // 创建新对话并跳转到聊天页面
   const memoryId = await chatStore.createConversation()
   if (memoryId) {
-    // 跳转到聊天页面，并传递初始消息与会话ID，避免目标页拿不到ID
-    router.push({
-      name: 'chat',
-      query: { message: message.trim(), memoryId },
-    })
+    // 将首条消息暂存到 store，不污染 URL
+    chatStore.setPendingInitialMessage(message.trim())
+    // 若需要也可设置当前会话ID（createConversation 已设置）
+    // chatStore.setCurrentMemoryId(memoryId)
+    router.push({ name: 'chat' })
   }
 }
 
