@@ -1,12 +1,7 @@
 <template>
   <div class="chat-view-container">
     <!-- 左侧对话列表 -->
-    <div
-      :class="[
-        'sidebar',
-        isSidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'
-      ]"
-    >
+    <div :class="['sidebar', isSidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded']">
       <ConversationList
         @select-conversation="handleSelectConversation"
         @create-new="handleCreateNew"
@@ -17,7 +12,7 @@
     <div
       :class="[
         'toggle-button',
-        isSidebarCollapsed ? 'toggle-button-collapsed' : 'toggle-button-expanded'
+        isSidebarCollapsed ? 'toggle-button-collapsed' : 'toggle-button-expanded',
       ]"
     >
       <Button
@@ -39,17 +34,38 @@
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>菜单</NavigationMenuTrigger>
+                <NavigationMenuLink asChild>
+                  <Button variant="ghost" class="menu-button" @click="handleGoHome">
+                    回到主页
+                  </Button>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>仓库链接</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div class="menu-content">
                     <NavigationMenuLink asChild>
-                      <Button
-                        variant="ghost"
+                      <a
+                        href="https://github.com/AsihanBit/langchain4j-ai-frontend"
+                        target="_blank"
                         class="menu-button"
-                        @click="handleGoHome"
                       >
-                        回到主页
-                      </Button>
+                        <Button variant="ghost"> 演示页 </Button>
+                      </a>
+                    </NavigationMenuLink>
+                  </div>
+                  <div class="menu-content">
+                    <NavigationMenuLink asChild>
+                      <a
+                        href="https://github.com/AsihanBit/langchain4j-ai-assistant"
+                        target="_blank"
+                        class="menu-button"
+                      >
+                        <Button variant="ghost"> 后端 </Button>
+                      </a>
                     </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
@@ -144,11 +160,10 @@
                 <Send class="icon-size" />
               </Button>
             </div>
-            <p class="input-hint">
-              按 Enter 发送，Shift + Enter 换行
-            </p>
+            <p class="input-hint">按 Enter 发送，Shift + Enter 换行</p>
           </div>
         </div>
+        <Toaster />
       </div>
     </div>
   </div>
@@ -162,6 +177,9 @@ import { Send, ChevronDown, ChevronUp, Menu, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Toaster } from '@/components/ui/sonner'
+import 'vue-sonner/style.css'
+import { toast } from 'vue-sonner'
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -199,14 +217,12 @@ const conversations = computed(() => chatStore.conversations)
 // 过滤并排序消息：只显示用户和AI的对话，按turnIndex正序排列
 const filteredMessages = computed(() => {
   return currentMessages.value
-    .filter(message =>
-      message.messageType === MessageType.USER ||
-      message.messageType === MessageType.AI
+    .filter(
+      (message) =>
+        message.messageType === MessageType.USER || message.messageType === MessageType.AI,
     )
     .sort((a, b) => a.turnIndex - b.turnIndex) // 按turnIndex正序：最早的在上面，最新的在下面
 })
-
-
 
 // 方法
 const handleSelectConversation = async (memoryId: string) => {
@@ -228,9 +244,20 @@ const handleGoHome = () => {
   router.push({ name: 'home' })
 }
 
-
-
 const handleSendMessage = async () => {
+
+  if (!currentMemoryId.value) {
+    // 请先创建或选择一个对话
+    toast('还未进入对话', {
+      description: '请先创建或选择一个对话',
+      action: {
+        label: '知道了',
+        // onClick: () => console.log('Undo'),
+      },
+    })
+    return
+  }
+
   if (!chatMessage.value.trim() || !currentMemoryId.value || isStreaming.value) return
 
   const messageToSend = chatMessage.value.trim()
@@ -243,7 +270,10 @@ const handleSendMessage = async () => {
     // 若是第一条消息，调用生成标题接口
     if (isFirstMessage) {
       try {
-        const res = await generateConversationTitle({ memoryId: currentMemoryId.value, message: messageToSend })
+        const res = await generateConversationTitle({
+          memoryId: currentMemoryId.value,
+          message: messageToSend,
+        })
         if (res.code === 1 && res.data?.title) {
           const id = res.data.memoryId || currentMemoryId.value
           chatStore.updateConversationTitle(id, res.data.title)
@@ -268,9 +298,10 @@ const sendMessage = async (message: string, memoryId: string) => {
 
     // 添加用户消息到界面
     // 计算新的turnIndex：找到当前最大的turnIndex并加1
-    const maxTurnIndex = currentMessages.value.length > 0
-      ? Math.max(...currentMessages.value.map(m => m.turnIndex))
-      : -1
+    const maxTurnIndex =
+      currentMessages.value.length > 0
+        ? Math.max(...currentMessages.value.map((m) => m.turnIndex))
+        : -1
     const userMessage = {
       id: Date.now().toString(),
       memoryId,
@@ -278,7 +309,7 @@ const sendMessage = async (message: string, memoryId: string) => {
       messageType: MessageType.USER,
       content: { prompt: message, completion: '' },
       sendTime: new Date().toISOString(),
-      model: { name: '', tokensInput: 0, tokensOutput: 0 }
+      model: { name: '', tokensInput: 0, tokensOutput: 0 },
     }
     chatStore.addMessage(userMessage)
 
@@ -306,9 +337,10 @@ const sendMessage = async (message: string, memoryId: string) => {
     if (streamingContent.value) {
       console.log('Adding AI message with content length:', streamingContent.value.length)
       // 计算新的turnIndex：找到当前最大的turnIndex并加1
-      const maxTurnIndex = currentMessages.value.length > 0
-        ? Math.max(...currentMessages.value.map(m => m.turnIndex))
-        : -1
+      const maxTurnIndex =
+        currentMessages.value.length > 0
+          ? Math.max(...currentMessages.value.map((m) => m.turnIndex))
+          : -1
       const aiMessage = {
         id: (Date.now() + 1).toString(),
         memoryId,
@@ -316,19 +348,19 @@ const sendMessage = async (message: string, memoryId: string) => {
         messageType: MessageType.AI,
         content: { prompt: '', completion: streamingContent.value },
         sendTime: new Date().toISOString(),
-        model: { name: '', tokensInput: 0, tokensOutput: 0 }
+        model: { name: '', tokensInput: 0, tokensOutput: 0 },
       }
       chatStore.addMessage(aiMessage)
     } else {
       console.warn('No streaming content received')
     }
-
   } catch (error) {
     console.error('Failed to send message:', error)
     // 显示错误消息给用户
-    const maxTurnIndex = currentMessages.value.length > 0
-      ? Math.max(...currentMessages.value.map(m => m.turnIndex))
-      : -1
+    const maxTurnIndex =
+      currentMessages.value.length > 0
+        ? Math.max(...currentMessages.value.map((m) => m.turnIndex))
+        : -1
     const errorMessage = {
       id: (Date.now() + 2).toString(),
       memoryId,
@@ -336,7 +368,7 @@ const sendMessage = async (message: string, memoryId: string) => {
       messageType: MessageType.AI,
       content: { prompt: '', completion: '抱歉，发送消息时出现错误，请稍后重试。' },
       sendTime: new Date().toISOString(),
-      model: { name: '', tokensInput: 0, tokensOutput: 0 }
+      model: { name: '', tokensInput: 0, tokensOutput: 0 },
     }
     chatStore.addMessage(errorMessage)
   } finally {
@@ -380,7 +412,7 @@ const scrollToBottom = async (smooth = true, force = false) => {
     if (scrollAnchor.value) {
       scrollAnchor.value.scrollIntoView({
         behavior: smooth ? 'smooth' : 'auto',
-        block: 'end'
+        block: 'end',
       })
       return
     }
@@ -391,7 +423,7 @@ const scrollToBottom = async (smooth = true, force = false) => {
       if (viewport) {
         viewport.scrollTo({
           top: viewport.scrollHeight,
-          behavior: smooth ? 'smooth' : 'auto'
+          behavior: smooth ? 'smooth' : 'auto',
         })
         return
       }
@@ -414,7 +446,7 @@ const scrollToTop = async (smooth = true) => {
       if (viewport) {
         viewport.scrollTo({
           top: 0,
-          behavior: smooth ? 'smooth' : 'auto'
+          behavior: smooth ? 'smooth' : 'auto',
         })
         return
       }
@@ -425,13 +457,17 @@ const scrollToTop = async (smooth = true) => {
 }
 
 // 监听消息变化，自动滚动到底部
-watch(filteredMessages, async (newMessages, oldMessages) => {
-  // 如果是新增消息，使用平滑滚动
-  if (newMessages.length > (oldMessages?.length || 0)) {
-    await nextTick()
-    scrollToBottom(true)
-  }
-}, { deep: true })
+watch(
+  filteredMessages,
+  async (newMessages, oldMessages) => {
+    // 如果是新增消息，使用平滑滚动
+    if (newMessages.length > (oldMessages?.length || 0)) {
+      await nextTick()
+      scrollToBottom(true)
+    }
+  },
+  { deep: true },
+)
 
 // 监听流式内容变化，自动滚动到底部
 watch(streamingContent, () => {
@@ -448,12 +484,16 @@ watch(currentMemoryId, async (newMemoryId) => {
 })
 
 // 监听路由变化，确保对话列表已加载
-watch(() => route.path, async (newPath) => {
-  if (newPath === '/chat' && conversations.value.length === 0) {
-    console.log('Route changed to /chat, loading conversations...')
-    await chatStore.loadConversations()
-  }
-}, { immediate: true })
+watch(
+  () => route.path,
+  async (newPath) => {
+    if (newPath === '/chat' && conversations.value.length === 0) {
+      console.log('Route changed to /chat, loading conversations...')
+      await chatStore.loadConversations()
+    }
+  },
+  { immediate: true },
+)
 
 // 生命周期
 onMounted(async () => {
@@ -469,7 +509,10 @@ onMounted(async () => {
 
     if (isFirstMessage) {
       try {
-        const res = await generateConversationTitle({ memoryId: initialMemoryId, message: initialMessage })
+        const res = await generateConversationTitle({
+          memoryId: initialMemoryId,
+          message: initialMessage,
+        })
         if (res.code === 1 && res.data?.title) {
           const id = res.data.memoryId || initialMemoryId
           chatStore.updateConversationTitle(id, res.data.title)
@@ -546,7 +589,9 @@ onActivated(async () => {
     width: 2.5rem; // 按钮宽度
     height: 2.5rem; // 按钮高度
     padding: 0; // 无内边距
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); // 阴影效果
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05); // 阴影效果
   }
 }
 
@@ -585,13 +630,16 @@ onActivated(async () => {
   }
 
   .menu-content {
-    padding: 1rem; // 内边距
-    width: 12rem; // 菜单宽度 (192px)
+    padding: 0.2rem; // 内边距
+    width: 8rem; // 菜单宽度 (192px)
   }
 
   .menu-button {
+    height: 2.5rem;
     width: 100%; // 占满宽度
-    justify-content: flex-start; // 左对齐
+    // justify-content: flex-start; // 左对齐
+    justify-content: center; // 左右居中
+    // text-align: center;
   }
 }
 
@@ -707,7 +755,9 @@ onActivated(async () => {
 
   .scroll-btn {
     border-radius: 50%; // 圆形按钮
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); // 阴影效果
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05); // 阴影效果
     width: 2.5rem; // 按钮宽度
     height: 2.5rem; // 按钮高度
     padding: 0; // 无内边距
@@ -768,7 +818,9 @@ onActivated(async () => {
 
 // 跳动动画关键帧
 @keyframes bounce {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0); // 缩放为0
   }
   40% {

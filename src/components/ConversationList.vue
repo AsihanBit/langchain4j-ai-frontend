@@ -3,7 +3,7 @@
     <!-- 头部 -->
     <div class="header">
       <div class="header-content">
-        <h2 class="title">对话</h2>
+        <div class="title">对话</div>
         <Button
           @click="handleCreateNew"
           :disabled="isCreatingConversation"
@@ -149,7 +149,8 @@ const formatTime = (timeStr: string) => {
     align-items: center;
     justify-content: space-between;
 
-    .title {
+    .title{
+      min-width: 100px;
       font-size: 1.125rem; // 18px
       font-weight: 600; // 半粗体
       color: #111827; // 深色文字
@@ -238,6 +239,7 @@ const formatTime = (timeStr: string) => {
 
 // 空状态样式
 .empty-state {
+  min-width: 100px; // 0也好像管用
   text-align: center;
   padding: 2rem 0;
   color: #6b7280; // 灰色文字

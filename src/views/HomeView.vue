@@ -15,14 +15,18 @@
         <!-- 左侧 - ParticleImage -->
         <div class="left-section">
           <div class="particle-container">
-            <ParticleImage  class="particle-image" image-src="/assets/home-text.png" :responsive-width="true" />
+            <ParticleImage
+              class="particle-image"
+              image-src="/assets/home-text.png"
+              :responsive-width="true"
+            />
           </div>
         </div>
 
         <!-- 中间 - 标题和内容 -->
         <div class="center-section">
-          <h1 :class="['main-title', { dark: isDark }]">AI 助手</h1>
-          <p :class="['subtitle', { dark: isDark }]">开始新的对话，探索无限可能</p>
+          <h1 :class="['main-title', { dark: isDark }]">Langchain</h1>
+          <p :class="['subtitle', { dark: isDark }]">轻量演示页</p> <!-- 开始新的对话，探索无限可能 -->
           <!-- 底部输入和按钮区域 -->
           <div class="bottom-section">
             <!-- 输入区域 -->
@@ -39,13 +43,87 @@
               <InteractiveHoverButton text="开始新聊天" @click="handleNewChat" />
               <InteractiveHoverButton text="进入聊天" @click="handleGoToChat" />
             </div>
+
+            <!-- Dock：中间偏下展示 GitHub 链接预览 -->
+            <div class="dock-area">
+              <Dock class="mb-6" :magnification="40">
+                <!-- :distance="10" -->
+                <!-- GitHub 主入口 -->
+                <DockIcon :disableMagnify="true">
+                  <!-- :fixedSize="40" -->
+                  <a
+                    href="https://github.com/AsihanBit"
+                    target="_blank"
+                    aria-label="GitHub 主页"
+                    class="dock-fill-link"
+                  >
+                    <Icon icon="mdi:github" class="dock-icon--fill" />
+                  </a>
+                </DockIcon>
+                <DockSeparator />
+                <!-- 前端仓库 -->
+                <DockIcon style="min-width: 50px;">
+                  <a
+                    href="https://github.com/AsihanBit/langchain4j-ai-frontend"
+                    target="_blank"
+                    class="flex items-center justify-center size-full"
+                  >
+                    演示页
+                  </a>
+                </DockIcon>
+                <!-- 后端仓库 -->
+                <DockIcon>
+                  <a
+                    href="https://github.com/AsihanBit/langchain4j-ai-assistant"
+                    target="_blank"
+                    class="flex items-center justify-center size-full"
+                  >
+                    <!--  text-sm sm:text-base -->
+                    后端
+                  </a>
+                </DockIcon>
+              </Dock>
+            </div>
           </div>
         </div>
 
         <!-- 右侧 - 空置域 -->
         <div class="right-section">
           <div :class="['placeholder-area', { dark: isDark }]">
-            <span :class="['placeholder-text', { dark: isDark }]">预留区域</span>
+            <br/>
+            <div class="placeholder-text">
+              <p>本页面是</p>
+              <strong>主体项目的演示版</strong>，
+              <p>仅用于演示.</p>
+              <p>了解完整项目请访问</p>
+            <br/>
+
+            <LinkPreview
+              url="https://github.com/AsihanBit/langchain4j-ai-frontend"
+              class="font-bold"
+              :width="500"
+              :height="250"
+            >
+              <a href="https://github.com/AsihanBit/langchain4j-ai-frontend" target="_blank">
+                演示页
+              </a>
+            </LinkPreview>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <LinkPreview
+              url="https://github.com/AsihanBit/langchain4j-ai-assistant"
+              class="font-bold"
+              :width="500"
+              :height="250"
+            >
+            <a href="https://github.com/AsihanBit/langchain4j-ai-assistant" target="_blank">
+                后端
+              </a>
+            </LinkPreview>
+            <br/>
+            <br/>
+            <p style="font-size: 10px;">*目标网站原因，预览框加载较慢</p>
+            </div>
+
           </div>
         </div>
       </div>
@@ -61,9 +139,12 @@ import { FallingStarsBg } from '@/components/ui/bg-falling-stars'
 import { VanishingInput } from '@/components/ui/vanishing-input'
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button'
 import { ParticleImage } from '@/components/ui/particle-image'
+import { LinkPreview } from '@/components/ui/link-preview'
+import { Dock, DockIcon, DockSeparator } from '@/components/ui/dock'
+// import { GithubIcon as Github } from 'lucide-vue-next'
 import ThemeToggle from '@/components/shadcn/ThemeToggle.vue'
 import { useChatStore } from '@/stores/chat'
-
+import { Icon } from '@iconify/vue'
 const router = useRouter()
 const chatStore = useChatStore()
 
@@ -223,7 +304,7 @@ const handleGoToChat = async () => {
     height: 200px;
     border: 2px dashed #d1d5db; // 虚线边框
     border-radius: 0.5rem;
-    display: flex;
+    display: inline-block;
     align-items: center;
     justify-content: center;
 
@@ -233,12 +314,13 @@ const handleGoToChat = async () => {
     }
 
     .placeholder-text {
-      color: #9ca3af;
+      color: #908ca3;
       font-size: 0.875rem;
+      text-align: center;
 
       // 暗色主题下的文字颜色
       &.dark {
-        color: #6b7280;
+        color: #465675;
       }
     }
   }
@@ -309,5 +391,16 @@ const handleGoToChat = async () => {
   .main-content {
     padding: 1rem; // 减少内边距
   }
+}
+
+// Dock 填充样式：让内容填满 DockIcon 动态尺寸
+.dock-icon--fill {
+  width: 100%;
+  height: 100%;
+}
+.dock-fill-link {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 </style>
